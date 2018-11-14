@@ -22,12 +22,7 @@ void write_out(unsigned char* inbuf){
     write_generic(inbuf, 63);
 }
 
-int main(int argc, char* argv[])
-{
-	int res;
-	unsigned char outbuf[63];
-    unsigned char inbuf[16];
-    
+
 #define handle_write() ({ \
         res = hid_write(handle, outbuf, 63); \
         res = hid_read(handle, inbuf, 16); \
@@ -36,6 +31,18 @@ int main(int argc, char* argv[])
         write_result(inbuf); \
         memset(outbuf, 0, 63); \
     })
+
+
+
+
+int main(int argc, char* argv[])
+{
+	int res, p;
+	unsigned char outbuf[63];
+    unsigned char inbuf[16];
+    
+    memset(outbuf, 0, 63);
+    
 
 	wchar_t wstr[MAX_STR];
 	hid_device *handle;
@@ -56,25 +63,16 @@ int main(int argc, char* argv[])
 	printf("Serial Number String: %ls", wstr);
 	printf("\n");
 
-    // Clear the outbuf array
-    int i = 0;
-    for (; i < 63; ++i)
-        outbuf[i] = 0x00;
 
-    // Construct a command
-    outbuf[0] = 0x02;   // Get firmware version
+    // Get firmware version
+    //outbuf[0] = 0x02;
+    //handle_write();
+
     
-    // Write 63 bytes, then read 16 bytes.
-//     res = hid_write(handle, outbuf, 63);
-//     res = hid_read(handle, inbuf, 16);
-// 
-//     // Print result
-//     write_out(outbuf);
-//     write_result(inbuf);
-//handle_write();
-    int p = 0;
+    
+    // Set LED strips on channel 2 to white
     outbuf[ 0] = 0x35;
-    outbuf[ 1] = 0x01;
+    outbuf[ 1] = 0x01; //channel 2
     
     //offset, len
     //0/28 for all LED strips (channel 2/0x1)
@@ -87,12 +85,15 @@ int main(int argc, char* argv[])
     outbuf[ 6] = 0x00;
     outbuf[ 7] = 0x00;
     
-    outbuf[ 8] = 0xFF;
+    outbuf[ 8] = 0xFF; //always 255
     
+    //Color in RGB
     outbuf[ 9] = 0xFF;
     outbuf[10] = 0xFF;
     outbuf[11] = 0xFF;
     
+    
+    //We don't actually need to set these, as mode 4 only uses color value 1
     outbuf[12] = 0xFF;
     outbuf[13] = 0x00;
     outbuf[14] = 0xFF;
@@ -104,44 +105,28 @@ int main(int argc, char* argv[])
     handle_write();
     
     
-    //outbuf[0] = 0x23;   // Set fan to fixed %
-    //outbuf[1] = 0x00;   // Select fan number 1
-    //outbuf[2] = 0x64;   // Set speed to 100%
-    //handle_write();
-//     sleep(5);
-// 
-//     outbuf[0] = 0x23;   // Set fan to fixed %
-//     outbuf[1] = 0x00;   // Select fan number 1
-//     outbuf[2] = 0x1E;   // Set speed to 30%
-//     res = hid_write(handle, outbuf, 63);
-//     res = hid_read(handle, inbuf, 16);
-//     write_result(inbuf);
-    
+    //Set brightness for LED strips (channel 2) to 100%
     p = 0;
     outbuf[p++] = 0x39;
     outbuf[p++] = 0x01;
     outbuf[p++] = 0x64;
     handle_write();
 
+    
+    //Set brightness for fan LEDs (channel 1) to 0%
     p = 0;
     outbuf[p++] = 0x39;
     outbuf[p++] = 0x00;
     outbuf[p++] = 0x00;
     handle_write();
-
+    
+    
+    //Commit (haven't proved this is actually necessary, but CL4 likes sending these, and when in Rome...)
     p = 0;
     outbuf[p++] = 0x33;
     outbuf[p++] = 0xFF;
-
     handle_write();
-
-
-//     p = 0;
-//     outbuf[p++] = 0x39;
-//     outbuf[p++] = 0x00;
-//     outbuf[p++] = 0x00;
-// 
-//     handle_write();
+ 
     
     return 0;
 }
