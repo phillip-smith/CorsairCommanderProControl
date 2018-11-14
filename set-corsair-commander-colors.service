@@ -1,0 +1,10 @@
+[Unit]
+Description=Set corsair commander colors
+After=basic.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/set-corsair-commander-colors
+
+[Install]
+WantedBy=multi-user.target
